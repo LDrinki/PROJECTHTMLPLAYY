@@ -3514,6 +3514,8 @@ function catIcon(m) {
    game from a separate icons/ folder, `img` holds that exact path (whatever
    extension the file actually is). Otherwise falls back to the original
    assumption that a same-named .png sits next to the game's own .html. */
+const GAME_BASE = 'https://pub-fd15b3e212f54601b7343be510549cd5.r2.dev/games/';
+
 function gameThumb(g) {
   return (g && g.img) ? g.img : ('games/' + ((g && g.slug) || '') + '.png');
 }
@@ -4675,7 +4677,7 @@ function renderGamePage(game) {
         if (loading) loading.classList.add('hide');
         if (wantsAutoFs && window.HP_doFullscreen) { try { window.HP_doFullscreen(); } catch(e) {} }
       };
-      iframe.src = 'games/' + game.slug + '.html';
+      iframe.src = GAME_BASE + encodeURIComponent(game.slug) + '.html';
     }, 100);
   }
 
@@ -4828,7 +4830,7 @@ function wireGameControls(game) {
     var iframe = document.getElementById('gp-iframe');
     var loading = document.getElementById('gp-loading');
     if (loading) loading.classList.remove('hide');
-    iframe.src = 'games/' + game.slug + '.html';
+    iframe.src = GAME_BASE + encodeURIComponent(game.slug) + '.html';
     iframe.onload = function() { if(loading) loading.classList.add('hide'); };
   });
 
@@ -4851,7 +4853,7 @@ function wireGameControls(game) {
 
   /* New Tab */
   if (tabB) tabB.addEventListener('click', function() {
-    window.open('games/' + game.slug + '.html', '_blank');
+    window.open(GAME_BASE + encodeURIComponent(game.slug) + '.html', '_blank');
   });
 
   /* Theatre mode */
@@ -6276,7 +6278,7 @@ function x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
     var iframe = document.createElement('iframe');
     iframe.setAttribute('allow', 'autoplay; fullscreen; gamepad');
     iframe.setAttribute('allowfullscreen', '');
-    iframe.src = 'games/' + slug + '.html';
+    iframe.src = GAME_BASE + encodeURIComponent(slug) + '.html';
     iframe.setAttribute('loading', 'lazy');
     iframe.setAttribute('aria-hidden', 'true');
     iframe.style.cssText = 'width:1px;height:1px;border:none;opacity:0;pointer-events:none;';
