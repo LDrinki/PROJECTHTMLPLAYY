@@ -1331,7 +1331,7 @@ body.is-scrolling #hp-ctrl-panel { backdrop-filter:none; background:rgba(0,0,2,.
     linear-gradient(90deg, rgba(var(--a-rgb),.012) 1px, transparent 1px);
   background-size:52px 52px;
 }
-.fg  { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr; gap:44px; position:relative; z-index:1; }
+.fg  { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:36px; position:relative; z-index:1; }
 /* Footer logo — barrel text matching nav */
 .fb-logo {
   font-family:'Archivo Black',sans-serif; font-size:2rem; letter-spacing:-.04em;
@@ -1425,6 +1425,35 @@ body.is-scrolling #hp-ctrl-panel { backdrop-filter:none; background:rgba(0,0,2,.
 .sett-head h2 { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; letter-spacing:.05em; color:var(--t0); line-height:1; margin-bottom:8px; }
 .sett-head p  { color:var(--t1); font-size:.88rem; }
 .sett-grid { display:none; } /* legacy, unused */
+
+/* ── Legal pages (Privacy Policy / Terms of Service) ── */
+.leg-wrap { max-width:760px; }
+.leg-body { display:flex; flex-direction:column; gap:6px; }
+.leg-sec {
+  padding:24px 0; border-bottom:1px solid rgba(255,255,255,.06);
+}
+.leg-sec:last-child { border-bottom:none; }
+.leg-h2 {
+  font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:.04em;
+  color:var(--t0); margin-bottom:12px;
+}
+.leg-h3 {
+  font-family:'DM Mono',monospace; font-size:.72rem; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--a); margin:16px 0 8px;
+}
+.leg-p { color:var(--t1); font-size:.88rem; line-height:1.7; margin-bottom:10px; }
+.leg-p:last-child { margin-bottom:0; }
+.leg-ul { margin:4px 0 12px; padding-left:20px; }
+.leg-ul li { color:var(--t1); font-size:.88rem; line-height:1.8; }
+.leg-a { color:var(--a); text-decoration:none; border-bottom:1px solid rgba(var(--a-rgb),.35); transition:border-color .18s; }
+.leg-a:hover { border-color:var(--a); }
+.leg-footer-nav { margin-top:32px; padding-top:24px; border-top:1px solid rgba(var(--a-rgb),.12); }
+.leg-switch {
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:.78rem; color:var(--a);
+  text-decoration:none; transition:transform .18s var(--ease);
+}
+.leg-switch:hover { transform:translateX(3px); }
 
 /* ── Settings: sidebar + panel layout ── */
 #sp-layout { display:flex; min-height:60vh; max-width:1080px; margin:0 auto; }
@@ -3118,6 +3147,12 @@ body.interacting .hero-pulse{animation-play-state:paused!important}
       <a onclick="randomGame()">🎲 Random Game</a>
       <a onclick="openLauncher()">⌨️ Quick Launcher</a>
     </div>
+    <div class="fc">
+      <h4>Legal</h4>
+      <a onclick="navigate('#/privacy')">🔒 Privacy Policy</a>
+      <a onclick="navigate('#/tos')">📜 Terms of Service</a>
+      <a href="mailto:htmlplaywebsite@gmail.com">✉️ Contact Us</a>
+    </div>
   </div>
   <div class="fbot">
     <span>© 2025 HTMLPlay — All rights reserved</span>
@@ -3761,6 +3796,12 @@ function route(hash) {
   if (hash === '#/all') {
     transitionTo(function() { renderAllGamesPage(); }, 'home'); return;
   }
+  if (hash === '#/privacy') {
+    transitionTo(function() { renderLegalPage('privacy'); }, 'settings'); return;
+  }
+  if (hash === '#/tos') {
+    transitionTo(function() { renderLegalPage('tos'); }, 'settings'); return;
+  }
   transitionTo(function() { renderHomePage(); }, 'home');
 }
 
@@ -3814,8 +3855,9 @@ function initNav() {
   function syncNav() {
     var onGame     = location.hash.startsWith('#/game/');
     var onSettings = location.hash === '#/settings';
+    var onLegal    = location.hash === '#/privacy' || location.hash === '#/tos';
     var onAll      = location.hash === '#/all';
-    var onSpecial  = onGame || onSettings;
+    var onSpecial  = onGame || onSettings || onLegal;
     /* Back button also shows on the All Games page (easy route home), but the
        sidebar stays visible there — unlike game/settings pages — since its
        category links are genuinely useful while browsing the library. */
@@ -3870,6 +3912,128 @@ function initLogo() {
 /* ═════════════════════════════════════════════════
    SETTINGS PAGE — in-SPA, always reachable
    ═════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════
+   LEGAL PAGES — Privacy Policy / Terms of Service
+   ═════════════════════════════════════════════════ */
+function legalSection(icon, title, bodyHTML) {
+  return '<div class="leg-sec">'+
+    '<h2 class="leg-h2">'+(icon?icon+' ':'')+x(title)+'</h2>'+
+    bodyHTML+
+  '</div>';
+}
+function legalP(text) { return '<p class="leg-p">'+text+'</p>'; }
+function legalUL(items) { return '<ul class="leg-ul">'+items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul>'; }
+
+function renderLegalPage(type) {
+  if (window._gpKeyHandler) { document.removeEventListener('keydown', window._gpKeyHandler); window._gpKeyHandler = null; }
+  if (window._heroFeatTimer) { clearInterval(window._heroFeatTimer); window._heroFeatTimer = null; }
+  var view = document.getElementById('view');
+  view.innerHTML = '';
+  var page = document.createElement('div');
+  page.className = 'page';
+
+  var isPrivacy = type === 'privacy';
+  var title = isPrivacy ? 'Privacy Policy' : 'Terms of Service';
+  var icon  = isPrivacy ? '🔒' : '📜';
+
+  var body = '';
+  if (isPrivacy) {
+    body =
+      legalSection('👋','Welcome', legalP('Welcome to HTMLPlay! Your privacy matters to us, and we want to keep things simple and clear. This page explains what information we collect, how we use it, and what choices you have.')) +
+      legalSection('','What Information We Collect',
+        '<h3 class="leg-h3">Information You Give Us</h3>'+
+        legalP('You might share information with us when you:') +
+        legalUL(['Contact us','Send feedback']) +
+        legalP('This could include things like your email address.') +
+        '<h3 class="leg-h3">Information Collected Automatically</h3>'+
+        legalP('When you use HTMLPlay, we automatically collect some basic information, such as:') +
+        legalUL(['Your IP address','Device type (mobile, tablet, desktop)','Browser type','Pages you visit','How long you stay on the site']) +
+        legalP('This helps us understand how people use the site and improve it.')) +
+      legalSection('🍪','Cookies',
+        legalP('We use cookies to make HTMLPlay work better. Cookies help us:') +
+        legalUL(['Keep the site running smoothly','Remember your preferences','Understand how users interact with games','Show ads']) +
+        legalP('You can control or disable cookies in your browser settings.')) +
+      legalSection('','Ads and Google AdSense',
+        legalP('We use Google AdSense to show ads on HTMLPlay. Google may use cookies to:') +
+        legalUL(['Show ads based on your interests','Display ads based on your visits to this and other websites']) +
+        legalP('You can control how Google shows ads to you at <a class="leg-a" href="https://adssettings.google.com" target="_blank" rel="noopener">adssettings.google.com</a>.') +
+        legalP('Learn more about how Google uses data at <a class="leg-a" href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">policies.google.com/technologies/ads</a>.')) +
+      legalSection('','Your Choices',
+        legalP('When you visit HTMLPlay, you\u2019ll see a cookie banner. You can:') +
+        legalUL(['Accept cookies','Reject non-essential cookies','Change your preferences anytime'])) +
+      legalSection('','How We Use Information',
+        legalUL(['Improve the website','Fix bugs and performance issues','Understand what games people enjoy','Show relevant ads','Keep the site safe'])) +
+      legalSection('','Do We Share Your Data?',
+        legalP('We don\u2019t sell your personal information.') +
+        legalP('We may share limited data with trusted partners (like advertising providers) to help run the site.')) +
+      legalSection('','Keeping Your Data Safe',
+        legalP('We take reasonable steps to protect your information, but no system is completely secure.')) +
+      legalSection('','Children\u2019s Privacy',
+        legalP('HTMLPlay is designed for general audiences. We do not knowingly collect personal information from children under 13.')) +
+      legalSection('','Your Rights',
+        legalP('Depending on where you live (like the UK or EU), you may have rights to:') +
+        legalUL(['Access your data','Request deletion','Object to certain uses']) +
+        legalP('To request this, contact us at: <a class="leg-a" href="mailto:liamdrinkwater784@gmail.com">liamdrinkwater784@gmail.com</a>')) +
+      legalSection('','Updates to This Policy',
+        legalP('We may update this page occasionally. When we do, we\u2019ll change the \u201cLast Updated\u201d date.')) +
+      legalSection('','Contact Us',
+        legalP('Questions? Reach out anytime:') +
+        legalUL([
+          'General inquiries: <a class="leg-a" href="mailto:htmlplaywebsite@gmail.com">htmlplaywebsite@gmail.com</a>',
+          'Site owner / data requests: <a class="leg-a" href="mailto:liamdrinkwater784@gmail.com">liamdrinkwater784@gmail.com</a>'
+        ]));
+  } else {
+    body =
+      legalSection('👋','Welcome', legalP('Welcome to HTMLPlay! By using our website, you agree to these Terms of Service. If you don\u2019t agree, please do not use the site.') +
+        legalP('HTMLPlay hosts online games that were sourced from a public folder labeled free to use. While the games are free, please read these rules carefully.')) +
+      legalSection('','Using HTMLPlay',
+        legalP('When using HTMLPlay, you agree to:') +
+        legalUL(['Use the site fairly and respectfully','Not attempt to break or hack the website','Not upload harmful content (like viruses)']) +
+        legalP('You may play all games on the site freely, but:') +
+        legalUL(['You cannot redistribute or sell the games','You cannot claim the games as your own','The games remain the property of their original creators'])) +
+      legalSection('🎮','Games and Content',
+        legalP('All games on HTMLPlay:') +
+        legalUL(['Are free to use and sourced from a public folder','Are provided \u201cas is\u201d']) +
+        legalP('We are not responsible if a game does not work properly, contains bugs, or behaves unexpectedly.')) +
+      legalSection('','Ads and Third-Party Services',
+        legalP('HTMLPlay uses Google AdSense to display ads. Google and other ad providers may:') +
+        legalUL(['Collect data for personalized ads','Show ads based on your browsing activity']) +
+        legalP('See our <a class="leg-a" href="#/privacy">Privacy Policy</a> for more details on cookies and tracking.')) +
+      legalSection('','Accounts (Optional)',
+        legalP('If accounts are ever added in the future:') +
+        legalUL(['Keep your login secure','Do not share your account','We may suspend accounts that break the rules'])) +
+      legalSection('','Limitation of Liability',
+        legalP('HTMLPlay is provided \u201cas is.\u201d We are not responsible for:') +
+        legalUL(['Data loss','Device issues caused by using the site','Problems caused by third-party services or ads']) +
+        legalP('Use the site at your own risk.')) +
+      legalSection('','Updates to These Terms',
+        legalP('We may update these Terms from time to time. Continuing to use HTMLPlay means you accept any changes.')) +
+      legalSection('','Termination',
+        legalP('We reserve the right to:') +
+        legalUL(['Restrict or block access','Remove content','Take action if rules are broken'])) +
+      legalSection('','Governing Law',
+        legalP('These Terms are governed by the laws of the United Kingdom.')) +
+      legalSection('','Contact Us',
+        legalP('Questions? Reach out at:') +
+        legalUL([
+          'General inquiries: <a class="leg-a" href="mailto:htmlplaywebsite@gmail.com">htmlplaywebsite@gmail.com</a>',
+          'Site owner: <a class="leg-a" href="mailto:liamdrinkwater784@gmail.com">liamdrinkwater784@gmail.com</a>'
+        ]));
+  }
+
+  page.innerHTML =
+    '<div class="sett-wrap leg-wrap">'+
+      '<div class="sett-head"><span class="sett-icon">'+icon+'</span><h2>'+title+'</h2><p>Last Updated: 23/03/26</p></div>'+
+      '<div class="leg-body">'+body+'</div>'+
+      '<div class="leg-footer-nav">'+
+        (isPrivacy
+          ? '<a class="leg-switch" onclick="navigate(\'#/tos\')">View Terms of Service \u2192</a>'
+          : '<a class="leg-switch" onclick="navigate(\'#/privacy\')">View Privacy Policy \u2192</a>') +
+      '</div>'+
+    '</div>';
+  view.appendChild(page);
+}
+
 function renderSettingsPage() {
   if (window._gpKeyHandler) { document.removeEventListener('keydown', window._gpKeyHandler); window._gpKeyHandler = null; }
   if (window._heroFeatTimer) { clearInterval(window._heroFeatTimer); window._heroFeatTimer = null; }
